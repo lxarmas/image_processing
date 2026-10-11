@@ -2,10 +2,11 @@
 # Assignment: Image Manipulation App 
 # Date: October 11, 2026
 
-# PURPOSE
-# This program loads one photo and displays a menu.
-# The user can resize it, flip it, or remove its blue channel.
-# Each completed result is saved as a separate PNG file.
+# Purpose
+# application loads one image and displays one menu.
+# The user has 6 options to resize up, down,flip horizontally,vertically,both
+#  or remove its blue channel.
+# Each option choosen result is saved as a separate PNG file.
 #
 # DESIGN
 # main() loads the photo and handles user input.
@@ -22,14 +23,14 @@
 # Check invalid input and report processing or saving errors.
 #
 # FUTURE OPTIONS
-# Possible additions: rotation, edge detection, and mouse drawing.
+# Possible additions: drawing with mouse.
 #
 # FILES
-# Use an original photograph named my_photo.jpg.
-# Run the program from the folder containing that photograph.
+# Use an original photograph my_photo.jpg.
+# Run the program from the parent folder containing that photograph.
 # Results are saved in the same working folder.
 # The counter resets each time the program starts.
-# A later run can replace files with matching names.
+# A later run can replace files with matching names for simplicity.
 #
 # TESTING
 # Every menu option still needs to be tested.
@@ -40,7 +41,7 @@
 # All other actions, including the import, happen inside functions.
 
 
-# Display the available menu choices.
+# Display menu choices.
 def show_menu():
     print("\nIMAGE MANIPULATION MENU")
     print("1. Resize up")
@@ -191,22 +192,22 @@ def main():
             try:
                 percentage = int(
                     input(
-                        "Enter a whole-number percentage "
-                        "(200 = double, 50 = half): "
+                        "Enter a whole-number percentage above 100 please "
+                        "(100 = 1.5 times bigger ,200 = double size): "
                     )
                 )
 
             # Handle input that cannot become a whole number.
             except ValueError:
-                print("Please enter a whole number.")
+                print("Invalid value,please enter a whole number.")
                 continue
 
-            # Resize up must use a percentage above 100.
+           
             if choice == "1" and percentage <= 100:
-                print("Resize up needs a percentage above 100.")
+                print("Resize up needs a percentage below 100.")
                 continue
 
-            # Resize down must use a percentage from 1 to 99.
+            
             if choice == "2" and not 1 <= percentage < 100:
                 print("Resize down needs a percentage from 1 to 99.")
                 continue
