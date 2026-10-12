@@ -2,28 +2,41 @@
 # Assignment: Image Manipulation App
 # Date: October 11, 2026
 
-# Purpose
-# Load a photo and offer resize up/down, three flips, remove blue,
-# and Quit. Save each processed result as a separate PNG.
 
-# Design
-# main() loads the photo and handles input; separate functions
-# process and save it. New image objects use extra memory but
-# preserve the original so every effect starts from the same photo.
+# Purpose
+# Load one unique photo with OpenCV and use a menu to create separate
+# processed PNG copies of the original photo.
+
+
+# Planned changes
+# - Add menu options to resize the image up and down.
+# - Add the required horizontal, vertical, and both-direction flip options.
+# - Add an extra image-processing option that removes the blue channel.
+# - Save each processed image using an effect name and a numbered counter.
+# - Keep the original image unchanged by creating a separate result object
+#   for every effect. This uses extra RAM, but it allows the user to apply
+#   different effects to the same original image without changing it.
+
+
+# Future processing options
+# In the future, I would add grayscale conversion, image cropping, or an
+# option that lets the user choose a different image file.
+
 
 # Files
-# Use your own my_photo.jpg in the current working folder.
-# Save results there. The counter resets at startup,
-# so later runs may overwrite matching filenames.
+# my_photo.jpg must be in the current working folder.
+# Processed PNG files are saved in the same folder.
+# The image counter resets each time the program starts, so running the
+# program again may overwrite output files with matching names.
+
 
 # Loading application
-# The final two lines call main() only when run directly.
-# Imports and processing happen inside functions.
-
+# The final two lines call main() only when this file runs directly.
+# OpenCV is imported inside main(), and helper functions process images.
 
 def show_menu():
     # menu display
-    print("\nIMAGE PROCESSING MENU")
+    print("\nIMAGE EFFECTS MENU")
     print("1. Resize up")
     print("2. Resize down")
     print("3. Flip horizontally")
@@ -33,41 +46,33 @@ def show_menu():
     print("7. Quit")
 
 def resize_image(cv2, image, percentage):
-# cv2 is called from main 
-# image: file to process
-# percentage: the requested dimensions compared with the original file
-   
-   height, width = image.shape[:2]
+    # Get the image height and width only, exclude channels
+    height, width = image.shape[:2]
 
-    # Convert the percentage to a multiplier.
-   scale = percentage / 100
+    #  decimal scaling ratio.
+    ratio = percentage / 100
 
-    # Calculate the new dimensions as whole numbers.
-   new_width = max(1, round(width * scale))
-   new_height = max(1, round(height * scale))
+    #interpolation method depending image is being condesed
+    if percentage < 100:
+        mode = cv2.INTER_AREA
+    else:
+        mode = cv2.INTER_CUBIC
 
-    # Choose how OpenCV calculates the resized pixels.
-   if percentage < 100:
-        method = cv2.INTER_AREA
-   else:
-        method = cv2.INTER_CUBIC
-
-    # Create the resized image.
-    # resize() expects the size as (width, height).
-   resized_image = cv2.resize(
+    resize_image_result = cv2.resize(
         image,
-        (new_width, new_height),
-        interpolation=method,
+        (
+            max(1, int(width * ratio)),
+            max(1, int(height * ratio)),
+        ),
+        interpolation=mode,
     )
 
-    # Send the new image back to the function's caller.
-   return resized_image
-
+    return resize_image_result
 
 
 def flip_image(cv2, image, direction):
 
-    # Flipping image, direction come from built in module OpenCV:
+   
     flipped_image = cv2.flip(image, direction)
     
     return flipped_image
@@ -75,24 +80,22 @@ def flip_image(cv2, image, direction):
 
 
 def remove_blue(image):
-    # Create a copy of the image with blue values set to zero.
-    # Copy to process on copy and not original.
-    changed_image = image.copy()
+    # making a image copy to process
+    no_blue_channel = image.copy()
 
-    #Open CV instructions:
-    # First colon: every row,Second colon: every column, 0: the blue channel
+
     
     # Set the blue value of every pixel to zero.
-    changed_image[:, :, 0] = 0
+    no_blue_channel[:, :, 0] = 0
 
-    return changed_image
+    return no_blue_channel
 
 
 
-def save_image(cv2, image, effect_name, counter):
+def save_image(cv2, image, process_name, counter):
     # Save the processed image.
     # print the effect and counter in the filename.
-    filename = f"my_photo_{effect_name}_{counter}.png"
+    filename = f"my_photo_{process_name}_{counter}.png"
 
     # Write the process to a file.
     # The returned value indicates whether saving succeeded.
@@ -119,17 +122,17 @@ def main():
         cv2.IMREAD_COLOR,
     )
 
-    # None if OpenCV can not read the image.
+    #  if any errors reading file
     if original_image is None:
         print(f"Sorry, system could not read {photo_filename}.")
         print("Check the filename and current working folder please.")
         return
 
-    # Display the original image dimensions file starts with.
+    # Display the original image dimensions.
     height, width = original_image.shape[:2]
     print(f"Your photos is {photo_filename}: {width} x {height} pixels.")
 
-    # Start numbering saved results at 1.
+
     counter = 1
 
     # Keep displaying the menu until the user chooses Quit.
@@ -144,7 +147,7 @@ def main():
             print("Closing the app, Goodbye!!.")
             break
 
-        # Reject entries that are not processing choices.
+        # block entries that are not selectable choices.
         if choice not in ("1", "2", "3", "4", "5", "6"):
             print("Please choose a number from 1 to 7.")
             continue
@@ -168,9 +171,10 @@ def main():
 
             # Try converting the user's text into a whole number.
             try:
-                percentage = int(input(prompt))
+                answer = input(prompt)
+                percentage = int(answer)
 
-            # Handle input that cannot become a whole number.
+            
             except ValueError:
                 print("Invalid value. Please enter a whole number.")
                 continue
@@ -191,34 +195,34 @@ def main():
                 result = resize_image(
                     cv2, original_image, percentage
                 )
-                effect_name = "resized_up"
+                process_name = "resized_up"
 
             elif choice == "2":
                 result = resize_image(
                     cv2, original_image, percentage
                 )
-                effect_name = "resized_down"
+                process_name = "resized_down"
 
             elif choice == "3":
                 result = flip_image(cv2, original_image, 1)
-                effect_name = "flipped_horizontal"
+                process_name = "flipped_horizontal"
 
             elif choice == "4":
                 result = flip_image(cv2, original_image, 0)
-                effect_name = "flipped_vertical"
+                process_name = "flipped_vertical"
 
             elif choice == "5":
                 result = flip_image(cv2, original_image, -1)
-                effect_name = "flipped_both"
+                process_name = "flipped_horizontal_vertical"
 
             else:
                 # The only remaining valid choice is 6.
                 result = remove_blue(original_image)
-                effect_name = "no_blue"
+                process_name = "no_blue_channel"
 
             # Save the image returned by the processing function.
             filename = save_image(
-                cv2, result, effect_name, counter
+                cv2, result, process_name, counter
             )
 
             # Display the output filename and dimensions.
